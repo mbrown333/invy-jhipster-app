@@ -1,0 +1,16 @@
+entity Category {
+	name String required,
+    created ZonedDateTime required
+}
+
+entity FoodItem {
+	name String required,
+    created ZonedDateTime required,
+    expiration ZonedDateTime
+}
+
+relationship ManyToOne {
+	Category{user(login)} to User,
+    FoodItem{user(login)} to User,
+	FoodItem{category(name)} to Category
+}

@@ -43,6 +43,8 @@ public class CacheConfiguration {
             cm.createCache(com.mbrowndev.pantryapp.domain.Authority.class.getName(), jcacheConfiguration);
             cm.createCache(com.mbrowndev.pantryapp.domain.User.class.getName() + ".authorities", jcacheConfiguration);
             cm.createCache(com.mbrowndev.pantryapp.domain.SocialUserConnection.class.getName(), jcacheConfiguration);
+            cm.createCache(com.mbrowndev.pantryapp.domain.Category.class.getName(), jcacheConfiguration);
+            cm.createCache(com.mbrowndev.pantryapp.domain.FoodItem.class.getName(), jcacheConfiguration);
             // jhipster-needle-ehcache-add-entry
         };
     }
