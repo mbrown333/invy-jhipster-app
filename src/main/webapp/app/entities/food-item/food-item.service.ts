@@ -77,8 +77,12 @@ export class FoodItemService {
         const copy: FoodItem = Object.assign({}, foodItem);
         copy.created = this.dateUtils.toDate(foodItem.created);
 
-        const expiration = foodItem.expiration.split('-');
-        copy.expiration = new Date(expiration[0], expiration[1] - 1, expiration[2]);
+        if (foodItem.expiration) {
+            const expiration = foodItem.expiration.split('-');
+            if (expiration.length === 3) {
+                copy.expiration = new Date(expiration[0], expiration[1] - 1, expiration[2]);
+            }
+        }
 
         return copy;
     }

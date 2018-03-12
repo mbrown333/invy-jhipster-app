@@ -31,6 +31,7 @@
     ],
     "jhiPrefix": "jhi",
     "enableTranslation": false,
-    "herokuDeployType": "jar"
+    "herokuDeployType": "jar",
+    "herokuAppName": "invy"
   }
 }
