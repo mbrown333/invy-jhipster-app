@@ -1,0 +1,27 @@
+<div>
+  <h3>
+    <span>Expiration List</span>
+    <!--select [(ngModel)]="selectedCategory" (ngModelChange)="onChange($event)">
+      <option [ngValue]="null">View All</option>
+      <option *ngFor="let category of categories" [ngValue]="category">{{category.name}}</option>
+    </select-->
+  </h3>
+  <span>This is what is expiring in the next month.</span>
+  <div class="row"></div><br/>
+  <div class="table-responsive" *ngIf="foodItems">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+          <th><span>Name</span></th>
+          <th><span>Expiration</span></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let foodItem of foodItems ;trackBy: trackId">
+            <td>{{foodItem.name}}</td>
+            <td>{{foodItem.expiration | date:'MM/yyyy'}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</div>

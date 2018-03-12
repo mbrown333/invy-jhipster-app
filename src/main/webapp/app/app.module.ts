@@ -14,6 +14,7 @@ import { PantryAppSharedModule, UserRouteAccessService } from './shared';
 import { PantryAppAppRoutingModule} from './app-routing.module';
 import { PantryAppHomeModule } from './home/home.module';
 import { PantryAppCategoryListModule } from './category-list/category-list.module';
+import { PantryAppExpirationModule } from './expiration/expiration.module';
 import { PantryAppAdminModule } from './admin/admin.module';
 import { PantryAppAccountModule } from './account/account.module';
 import { PantryAppEntityModule } from './entities/entity.module';
@@ -36,6 +37,7 @@ import {
         PantryAppSharedModule,
         PantryAppHomeModule,
         PantryAppCategoryListModule,
+        PantryAppExpirationModule,
         PantryAppAdminModule,
         PantryAppAccountModule,
         PantryAppEntityModule,

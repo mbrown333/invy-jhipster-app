@@ -16,6 +16,7 @@ import javassist.NotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,8 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Optional;
 
@@ -110,8 +113,11 @@ public class FoodItemResource {
         		if (!categoryRepository.exists(categoryId.get())) {
         			throw new NotFoundException("Category not found.");
         		}
+        		final String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new InternalServerErrorException("Current user login not found"));
+            final Optional<User> user = userRepository.findOneByLogin(userLogin);
+            user.orElseThrow(() -> new InternalServerErrorException("Current user not found"));
         		final Category category = categoryRepository.findOne(categoryId.get());
-        		return foodItemRepository.findByCategory(category);
+        		return foodItemRepository.findByUserAndCategoryOrderByExpirationAsc(user.get(), category);
         } else {
         		return foodItemRepository.findAll();
         }
@@ -143,5 +149,22 @@ public class FoodItemResource {
         log.debug("REST request to delete FoodItem : {}", id);
         foodItemRepository.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+    }
+    
+    @GetMapping("/food-items/expiring")
+    @Timed
+    public List<FoodItem> getExpiringFoodItems(
+    		@RequestParam(value="expiration", required = true) String expiration,
+    		@RequestParam(value="category", required = false) Optional<Long> categoryId) {
+    		log.debug("REST request to get FoodItems with expiration less than: {}", expiration);
+    		
+    		final String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new InternalServerErrorException("Current user login not found"));
+        final Optional<User> user = userRepository.findOneByLogin(userLogin);
+        user.orElseThrow(() -> new InternalServerErrorException("Current user not found"));
+        
+        DateTimeFormatter dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME;
+        ZonedDateTime expirationDate = dateTimeFormat.parse(expiration, ZonedDateTime::from);
+    		
+        return foodItemRepository.findByUserAndExpirationLessThanEqualOrderByExpirationAsc(user.get(), expirationDate);
     }
 }

@@ -40,6 +40,15 @@ export class FoodItemService {
             .map((res: HttpResponse<FoodItem[]>) => this.convertArrayResponse(res));
     }
 
+    queryExpiration(req?: any): Observable<HttpResponse<FoodItem[]>> {
+        console.log('query Expiration', req);
+        req.expiration = this.convertExpiration(req.expiration);
+        const options = createRequestOption(req);
+        console.log('options', options);
+        return this.http.get<FoodItem[]>(`${this.resourceUrl}/expiring`, { params: options, observe: 'response'})
+            .map((res: HttpResponse<FoodItem[]>) => this.convertArrayResponse(res));
+    }
+
     delete(id: number): Observable<HttpResponse<any>> {
         return this.http.delete<any>(`${this.resourceUrl}/${id}`, { observe: 'response'});
     }
@@ -85,5 +94,11 @@ export class FoodItemService {
         }
 
         return copy;
+    }
+
+    private convertExpiration(expirationMonths: number): String {
+        const date = new Date();
+        date.setMonth(date.getMonth() + expirationMonths);
+        return date.toISOString();
     }
 }
