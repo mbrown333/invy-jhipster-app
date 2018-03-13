@@ -1,4 +1,7 @@
-# pantryApp
+# invy - The pantry inventory management app
+
+Deployed on Heroku at: [http://invy.herokuapp.com/](http://invy.herokuapp.com/)
+
 This application was generated using JHipster 4.14.1, you can find documentation and help at [http://www.jhipster.tech/documentation-archive/v4.14.1](http://www.jhipster.tech/documentation-archive/v4.14.1).
 
 ## Development
