@@ -1,12 +1,21 @@
 <div>
   <h3>
     <span>Expiration List</span>
-    <!--select [(ngModel)]="selectedCategory" (ngModelChange)="onChange($event)">
+  </h3>
+  <div class="row">
+    <label class="col-sm-3 col-form-label">Category: </label>
+    <select [(ngModel)]="selectedCategory" (ngModelChange)="onChange($event)" class="col-sm-3 form-control">
       <option [ngValue]="null">View All</option>
       <option *ngFor="let category of categories" [ngValue]="category">{{category.name}}</option>
-    </select-->
-  </h3>
-  <span>This is what is expiring in the next month.</span>
+    </select>
+  </div>
+  <div class="row"></div><br/>
+  <div class="row">
+    <label class="col-sm-3 col-form-label">This is what is expiring in the next:</label>
+    <select [(ngModel)]="selectedExpiration" (ngModelChange)="onChange($event)" class="col-sm-3 form-control">
+      <option *ngFor="let expiration of expirationOptions" [ngValue]="expiration">{{expiration.label}}</option>
+    </select>
+  </div>
   <div class="row"></div><br/>
   <div class="table-responsive" *ngIf="foodItems">
     <table class="table table-striped">

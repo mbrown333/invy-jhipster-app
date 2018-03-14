@@ -155,7 +155,7 @@ public class FoodItemResource {
     @Timed
     public List<FoodItem> getExpiringFoodItems(
     		@RequestParam(value="expiration", required = true) String expiration,
-    		@RequestParam(value="category", required = false) Optional<Long> categoryId) {
+    		@RequestParam(value="category", required = false) Optional<Long> categoryId) throws NotFoundException {
     		log.debug("REST request to get FoodItems with expiration less than: {}", expiration);
     		
     		final String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new InternalServerErrorException("Current user login not found"));
@@ -165,6 +165,14 @@ public class FoodItemResource {
         DateTimeFormatter dateTimeFormat = DateTimeFormatter.ISO_DATE_TIME;
         ZonedDateTime expirationDate = dateTimeFormat.parse(expiration, ZonedDateTime::from);
     		
-        return foodItemRepository.findByUserAndExpirationLessThanEqualOrderByExpirationAsc(user.get(), expirationDate);
+        if (categoryId.isPresent()) {
+	    		if (!categoryRepository.exists(categoryId.get())) {
+	    			throw new NotFoundException("Category not found.");
+	    		}
+	    		final Category category = categoryRepository.findOne(categoryId.get());
+	    		return foodItemRepository.findByUserAndCategoryAndExpirationLessThanEqualOrderByExpirationAsc(user.get(), category, expirationDate);
+        } else {
+        		return foodItemRepository.findByUserAndExpirationLessThanEqualOrderByExpirationAsc(user.get(), expirationDate);
+        }
     }
 }

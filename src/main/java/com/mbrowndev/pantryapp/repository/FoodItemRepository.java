@@ -25,4 +25,6 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
     List<FoodItem> findByUserAndCategoryOrderByExpirationAsc(User user, Category category);
     
     List<FoodItem> findByUserAndExpirationLessThanEqualOrderByExpirationAsc(User user, ZonedDateTime expiration);
+    
+    List<FoodItem> findByUserAndCategoryAndExpirationLessThanEqualOrderByExpirationAsc(User user, Category category, ZonedDateTime expiration);
 }

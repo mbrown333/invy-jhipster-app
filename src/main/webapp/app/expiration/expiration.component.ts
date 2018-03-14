@@ -16,6 +16,13 @@ export class ExpirationComponent implements OnInit {
   categories: Category[];
   foodItems: FoodItem[];
   selectedCategory: Category;
+  expirationOptions: any[] = [
+    { value: 1, label: '1 month' },
+    { value: 3, label: '3 months' },
+    { value: 6, label: '6 month' },
+    { value: 12, label: '1 year' }
+  ];
+  selectedExpiration: any;
 
   constructor(
     private categoryService: CategoryService,
@@ -33,7 +40,8 @@ export class ExpirationComponent implements OnInit {
   }
 
   loadItems() {
-    this.foodItemService.queryExpiration({ expiration: 1 }).subscribe(
+    const options = { expiration: this.selectedExpiration.value, category: this.selectedCategory ? this.selectedCategory.id : '' };
+    this.foodItemService.queryExpiration(options).subscribe(
       (res: HttpResponse<FoodItem[]>) => {
           this.foodItems = res.body;
       },
@@ -42,8 +50,14 @@ export class ExpirationComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log('expirationOptions', this.expirationOptions);
     this.selectedCategory = null;
+    this.selectedExpiration = this.expirationOptions[0];
     this.loadAllCategories();
+    this.loadItems();
+  }
+
+  onChange(event) {
     this.loadItems();
   }
 
