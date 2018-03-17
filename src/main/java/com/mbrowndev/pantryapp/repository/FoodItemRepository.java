@@ -18,13 +18,16 @@ import java.util.List;
 @SuppressWarnings("unused")
 @Repository
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
-//
-//    @Query("select food_item from FoodItem food_item where food_item.user.login = ?#{principal.username}")
-//    List<FoodItem> findByUserIsCurrentUserOrderByExpirationAsc();
 
-    List<FoodItem> findByUserAndCategoryOrderByExpirationAsc(User user, Category category);
+    @Query("select food_item from FoodItem food_item where food_item.user.login = ?#{principal.username} order by food_item.expiration asc")
+    List<FoodItem> findByUserIsCurrentUser();
+
+    @Query("select food_item from FoodItem food_item where food_item.user.login = ?#{principal.username} and food_item.category = :category order by food_item.expiration asc")
+    List<FoodItem> findByUserIsCurrentUserAndCategory(@Param("category") Category category);
     
-    List<FoodItem> findByUserAndExpirationLessThanEqualOrderByExpirationAsc(User user, ZonedDateTime expiration);
+    @Query("select food_item from FoodItem food_item where food_item.user.login = ?#{principal.username} and food_item.expiration <= :expiration order by food_item.expiration asc")
+    List<FoodItem> findByUserIsCurrentUserAndExpirationLessThanDate(@Param("expiration") ZonedDateTime expiration);
     
-    List<FoodItem> findByUserAndCategoryAndExpirationLessThanEqualOrderByExpirationAsc(User user, Category category, ZonedDateTime expiration);
+    @Query("select food_item from FoodItem food_item where food_item.user.login = ?#{principal.username} and food_item.category = :category and food_item.expiration <= :expiration order by food_item.expiration asc")
+    List<FoodItem> findByUserIsCurrentUserAndCategoryAndExpirationLessThanDate(@Param("category") Category category, @Param("expiration") ZonedDateTime expiration);
 }
