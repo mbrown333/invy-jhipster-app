@@ -98,8 +98,8 @@ public class CategoryResource {
     @Timed
     public List<Category> getAllCategories() {
         log.debug("REST request to get all Categories");
-        return categoryRepository.findAll();
-        }
+        return categoryRepository.findByUserIsCurrentUser();
+    }
 
     /**
      * GET  /categories/:id : get the "id" category.
