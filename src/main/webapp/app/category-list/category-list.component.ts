@@ -15,7 +15,9 @@ import { Principal } from '../shared';
 })
 export class CategoryListComponent implements OnInit, OnDestroy {
   categories: Category[];
+  search: string;
   foodItems: FoodItem[];
+  foodItemsDisplay: FoodItem[];
   selectedCategory: Category;
   currentAccount: any;
   eventSubscriber: Subscription;
@@ -43,6 +45,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     this.foodItemService.query().subscribe(
       (res: HttpResponse<FoodItem[]>) => {
           this.foodItems = res.body;
+          this.filterItemsBySearch();
       },
       (res: HttpErrorResponse) => this.onError(res.message)
     );
@@ -52,9 +55,19 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     this.foodItemService.query({ category: this.selectedCategory.id }).subscribe(
       (res: HttpResponse<FoodItem[]>) => {
           this.foodItems = res.body;
+          this.filterItemsBySearch();
       },
       (res: HttpErrorResponse) => this.onError(res.message)
     );
+  }
+
+  filterItemsBySearch() {
+    if (!this.search) {
+      this.foodItemsDisplay = this.foodItems;
+    } else {
+      const searchTerm = this.search.toLowerCase();
+      this.foodItemsDisplay = this.foodItems.filter((item) => item.name.toLowerCase().indexOf(searchTerm) > -1);
+    }
   }
 
   ngOnInit() {
