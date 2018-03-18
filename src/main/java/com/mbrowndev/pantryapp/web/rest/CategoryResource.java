@@ -3,9 +3,8 @@ package com.mbrowndev.pantryapp.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.mbrowndev.pantryapp.domain.Category;
 import com.mbrowndev.pantryapp.domain.User;
-import com.mbrowndev.pantryapp.repository.CategoryRepository;
-import com.mbrowndev.pantryapp.repository.UserRepository;
-import com.mbrowndev.pantryapp.security.SecurityUtils;
+import com.mbrowndev.pantryapp.service.CategoryService;
+import com.mbrowndev.pantryapp.service.UserService;
 import com.mbrowndev.pantryapp.web.rest.errors.BadRequestAlertException;
 import com.mbrowndev.pantryapp.web.rest.errors.InternalServerErrorException;
 import com.mbrowndev.pantryapp.web.rest.util.HeaderUtil;
@@ -32,14 +31,15 @@ public class CategoryResource {
     private final Logger log = LoggerFactory.getLogger(CategoryResource.class);
 
     private static final String ENTITY_NAME = "category";
-
-    private final CategoryRepository categoryRepository;
     
-    private final UserRepository userRepository;
+    private final CategoryService categoryService;
+    
+    private final UserService userService;
 
-    public CategoryResource(CategoryRepository categoryRepository, UserRepository userRepository) {
-        this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
+    public CategoryResource(CategoryService categoryService, UserService userService) {
+    		this.categoryService = categoryService;
+        //this.categoryRepository = categoryRepository;
+        this.userService = userService;
     }
 
     /**
@@ -56,12 +56,12 @@ public class CategoryResource {
         if (category.getId() != null) {
             throw new BadRequestAlertException("A new category cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        final String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new InternalServerErrorException("Current user login not found"));
-        final Optional<User> user = userRepository.findOneByLogin(userLogin);
-        user.orElseThrow(() -> new InternalServerErrorException("Current user not found"));
+
+        Optional<User> user = userService.getUserWithAuthorities();
+        user.orElseThrow(() -> new InternalServerErrorException("Current user login not found"));
         category.setUser(user.get());
         category.setCreated(ZonedDateTime.now());
-        Category result = categoryRepository.save(category);
+        Category result = categoryService.save(category);
         return ResponseEntity.created(new URI("/api/categories/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -83,7 +83,7 @@ public class CategoryResource {
         if (category.getId() == null) {
             return createCategory(category);
         }
-        Category result = categoryRepository.save(category);
+        Category result = categoryService.save(category);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, category.getId().toString()))
             .body(result);
@@ -98,7 +98,7 @@ public class CategoryResource {
     @Timed
     public List<Category> getAllCategories() {
         log.debug("REST request to get all Categories");
-        return categoryRepository.findByUserIsCurrentUser();
+        return categoryService.getAllForCurrentUser();
     }
 
     /**
@@ -111,8 +111,7 @@ public class CategoryResource {
     @Timed
     public ResponseEntity<Category> getCategory(@PathVariable Long id) {
         log.debug("REST request to get Category : {}", id);
-        Category category = categoryRepository.findOne(id);
-        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(category));
+        return ResponseUtil.wrapOrNotFound(categoryService.getCategory(id));
     }
 
     /**
@@ -125,7 +124,7 @@ public class CategoryResource {
     @Timed
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         log.debug("REST request to delete Category : {}", id);
-        categoryRepository.delete(id);
+        categoryService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

@@ -3,9 +3,10 @@ package com.mbrowndev.pantryapp.web.rest;
 import com.mbrowndev.pantryapp.PantryApp;
 
 import com.mbrowndev.pantryapp.domain.FoodItem;
-import com.mbrowndev.pantryapp.repository.CategoryRepository;
 import com.mbrowndev.pantryapp.repository.FoodItemRepository;
-import com.mbrowndev.pantryapp.repository.UserRepository;
+import com.mbrowndev.pantryapp.service.CategoryService;
+import com.mbrowndev.pantryapp.service.FoodItemService;
+import com.mbrowndev.pantryapp.service.UserService;
 import com.mbrowndev.pantryapp.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
@@ -58,9 +59,13 @@ public class FoodItemResourceIntTest {
     private FoodItemRepository foodItemRepository;
     
     @Autowired
-    private UserRepository userRepository;
+    private FoodItemService foodItemService;
     
-    @Autowired CategoryRepository categoryRepository;
+    @Autowired
+    private UserService userService;
+    
+    @Autowired 
+    private CategoryService categoryService;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -81,7 +86,7 @@ public class FoodItemResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final FoodItemResource foodItemResource = new FoodItemResource(foodItemRepository, userRepository, categoryRepository);
+        final FoodItemResource foodItemResource = new FoodItemResource(foodItemService, userService, categoryService);
         this.restFoodItemMockMvc = MockMvcBuilders.standaloneSetup(foodItemResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

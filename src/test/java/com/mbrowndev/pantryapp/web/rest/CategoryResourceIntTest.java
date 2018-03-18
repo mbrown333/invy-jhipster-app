@@ -4,7 +4,8 @@ import com.mbrowndev.pantryapp.PantryApp;
 
 import com.mbrowndev.pantryapp.domain.Category;
 import com.mbrowndev.pantryapp.repository.CategoryRepository;
-import com.mbrowndev.pantryapp.repository.UserRepository;
+import com.mbrowndev.pantryapp.service.CategoryService;
+import com.mbrowndev.pantryapp.service.UserService;
 import com.mbrowndev.pantryapp.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
@@ -49,12 +50,15 @@ public class CategoryResourceIntTest {
 
     private static final ZonedDateTime DEFAULT_CREATED = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
     private static final ZonedDateTime UPDATED_CREATED = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
-
-    @Autowired
-    private CategoryRepository categoryRepository;
     
     @Autowired
-    private UserRepository userRepository;
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private CategoryService categoryService;
+    
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -75,7 +79,7 @@ public class CategoryResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final CategoryResource categoryResource = new CategoryResource(categoryRepository, userRepository);
+        final CategoryResource categoryResource = new CategoryResource(categoryService, userService);
         this.restCategoryMockMvc = MockMvcBuilders.standaloneSetup(categoryResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

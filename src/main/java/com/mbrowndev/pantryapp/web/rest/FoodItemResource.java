@@ -4,10 +4,9 @@ import com.codahale.metrics.annotation.Timed;
 import com.mbrowndev.pantryapp.domain.Category;
 import com.mbrowndev.pantryapp.domain.FoodItem;
 import com.mbrowndev.pantryapp.domain.User;
-import com.mbrowndev.pantryapp.repository.CategoryRepository;
-import com.mbrowndev.pantryapp.repository.FoodItemRepository;
-import com.mbrowndev.pantryapp.repository.UserRepository;
-import com.mbrowndev.pantryapp.security.SecurityUtils;
+import com.mbrowndev.pantryapp.service.CategoryService;
+import com.mbrowndev.pantryapp.service.FoodItemService;
+import com.mbrowndev.pantryapp.service.UserService;
 import com.mbrowndev.pantryapp.web.rest.errors.BadRequestAlertException;
 import com.mbrowndev.pantryapp.web.rest.errors.InternalServerErrorException;
 import com.mbrowndev.pantryapp.web.rest.util.HeaderUtil;
@@ -16,7 +15,6 @@ import javassist.NotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +23,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,17 +36,17 @@ public class FoodItemResource {
     private final Logger log = LoggerFactory.getLogger(FoodItemResource.class);
 
     private static final String ENTITY_NAME = "foodItem";
-
-    private final FoodItemRepository foodItemRepository;
     
-    private final UserRepository userRepository;
+    private final FoodItemService foodItemService;
     
-    private final CategoryRepository categoryRepository;
+    private final UserService userService;
+    
+    private final CategoryService categoryService;
 
-    public FoodItemResource(FoodItemRepository foodItemRepository, UserRepository userRepository, CategoryRepository categoryRepository) {
-        this.foodItemRepository = foodItemRepository;
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
+    public FoodItemResource(FoodItemService foodItemService, UserService userService, CategoryService categoryService) {
+        this.foodItemService = foodItemService;
+        this.userService = userService;
+        this.categoryService = categoryService;
     }
 
     /**
@@ -66,12 +63,12 @@ public class FoodItemResource {
         if (foodItem.getId() != null) {
             throw new BadRequestAlertException("A new foodItem cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        final String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new InternalServerErrorException("Current user login not found"));
-        final Optional<User> user = userRepository.findOneByLogin(userLogin);
+
+        final Optional<User> user = userService.getUserWithAuthorities();
         user.orElseThrow(() -> new InternalServerErrorException("Current user not found"));
         foodItem.setUser(user.get());
         foodItem.setCreated(ZonedDateTime.now());
-        FoodItem result = foodItemRepository.save(foodItem);
+        FoodItem result = foodItemService.save(foodItem);
         return ResponseEntity.created(new URI("/api/food-items/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -93,7 +90,7 @@ public class FoodItemResource {
         if (foodItem.getId() == null) {
             return createFoodItem(foodItem);
         }
-        FoodItem result = foodItemRepository.save(foodItem);
+        FoodItem result = foodItemService.save(foodItem);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, foodItem.getId().toString()))
             .body(result);
@@ -110,13 +107,11 @@ public class FoodItemResource {
     public List<FoodItem> getAllFoodItems(@RequestParam(value="category", required=false) Optional<Long> categoryId) throws NotFoundException {
         log.debug("REST request to get all FoodItems");
         if (categoryId.isPresent()) {
-        		if (!categoryRepository.exists(categoryId.get())) {
-        			throw new NotFoundException("Category not found.");
-        		}
-        		final Category category = categoryRepository.findOne(categoryId.get());
-        		return foodItemRepository.findByUserIsCurrentUserAndCategory(category);
+        		final Optional<Category> category = categoryService.getCategory(categoryId.get());
+        		category.orElseThrow(() -> new NotFoundException("Category not found."));
+        		return foodItemService.getByCategoryForCurrentUser(category.get());
         } else {
-        		return foodItemRepository.findByUserIsCurrentUser();
+        		return foodItemService.getAllForCurrentUser();
         }
     }
 
@@ -130,8 +125,7 @@ public class FoodItemResource {
     @Timed
     public ResponseEntity<FoodItem> getFoodItem(@PathVariable Long id) {
         log.debug("REST request to get FoodItem : {}", id);
-        FoodItem foodItem = foodItemRepository.findOne(id);
-        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(foodItem));
+        return ResponseUtil.wrapOrNotFound(foodItemService.get(id));
     }
 
     /**
@@ -144,7 +138,7 @@ public class FoodItemResource {
     @Timed
     public ResponseEntity<Void> deleteFoodItem(@PathVariable Long id) {
         log.debug("REST request to delete FoodItem : {}", id);
-        foodItemRepository.delete(id);
+        foodItemService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
     
@@ -159,13 +153,11 @@ public class FoodItemResource {
         ZonedDateTime expirationDate = dateTimeFormat.parse(expiration, ZonedDateTime::from);
     		
         if (categoryId.isPresent()) {
-	    		if (!categoryRepository.exists(categoryId.get())) {
-	    			throw new NotFoundException("Category not found.");
-	    		}
-	    		final Category category = categoryRepository.findOne(categoryId.get());
-	    		return foodItemRepository.findByUserIsCurrentUserAndCategoryAndExpirationLessThanDate(category, expirationDate);
+        		final Optional<Category> category = categoryService.getCategory(categoryId.get());
+        		category.orElseThrow(() -> new NotFoundException("Category not found."));
+	    		return foodItemService.getByCategoryAndExpirationForCurrentUser(category.get(), expirationDate);
         } else {
-        		return foodItemRepository.findByUserIsCurrentUserAndExpirationLessThanDate(expirationDate);
+        		return foodItemService.getByExpirationForCurrentUser(expirationDate);
         }
     }
 }
